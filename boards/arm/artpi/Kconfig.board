@@ -1,0 +1,7 @@
+# ART-Pi board configuration
+
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_ARTPI
+	bool "ART-Pi Development Board"
+	depends on SOC_STM32H750XX

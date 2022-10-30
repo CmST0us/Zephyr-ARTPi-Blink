@@ -1,0 +1,15 @@
+identifier: artpi
+name: RT-Thread ART-Pi
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+  - xtools
+ram: 512
+flash: 2048
+supported:
+  - uart
+  - gpio
+  - backup_sram
+  - watchdog
