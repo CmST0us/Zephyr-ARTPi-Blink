@@ -4,6 +4,9 @@
 # This CMake file is picked by the Zephyr build system because it is defined
 # as the module CMake entry point (see zephyr/module.yml).
 
+set(BOARD artpi)
+set(ZEPHYR_TOOLCHAIN_VARIANT zephyr)
+
 list(APPEND BOARD_ROOT 
         ${CMAKE_CURRENT_LIST_DIR}
         )

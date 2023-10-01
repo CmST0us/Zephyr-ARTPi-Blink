@@ -5,17 +5,20 @@
  */
 
 #include <zephyr/kernel.h>
-#include <zephyr/device.h>
+#include <stdio.h>
+#include <zephyr/usb/usb_device.h>
 #include <zephyr/drivers/gpio.h>
 
-void main(void)
-{
-    struct gpio_dt_spec led = GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios);
-    gpio_pin_configure_dt(&led, GPIO_OUTPUT_INACTIVE);
-
-    while (1) {
-        gpio_pin_toggle_dt(&led);
-        k_sleep(K_MSEC(1000));
+int main(void) {
+    if (usb_enable(NULL)) {
+        return -1;
     }
 
+    struct gpio_dt_spec led_b = GPIO_DT_SPEC_GET(DT_NODELABEL(blue_led), gpios);
+    gpio_pin_configure_dt(&led_b, GPIO_OUTPUT_INACTIVE);
+    while (1) {
+        gpio_pin_toggle_dt(&led_b);
+        k_sleep(K_MSEC(1000));
+    }
+    return 0;
 }

@@ -14,9 +14,7 @@
 		zephyr,console = &usart1;
 		zephyr,shell-uart = &usart1;
 		zephyr,sram = &sram0;
-		zephyr,flash = &flash0;
 		zephyr,dtcm = &dtcm;
-		zephyr,code-partition = &slot0_partition;
 	};
 
 	soc {
@@ -28,10 +26,10 @@
 			num-bidir-endpoints = <9>;
 			ram-size = <4096>;
 			maximum-speed = "full-speed";
-			clocks = <&rcc STM32_CLOCK_BUS_AHB1 0x8000000>;
+			clocks = <&rcc STM32_CLOCK_BUS_AHB1 0x08000000>,
+				 <&rcc STM32_SRC_HSI48 USB_SEL(3)>;
 			phys = <&otghs_fs_phy>;
 			status = "disabled";
-			label = "OTG_FS";
 		};
 	};
 
@@ -40,31 +38,26 @@
 		device_type = "memory";
 		reg = <0xc0000000 DT_SIZE_M(32)>;
 		zephyr,memory-region = "SDRAM1";
-        zephyr,memory-region-mpu = "RAM";
 	};
 
 	otghs_fs_phy: otghs_fs_phy {
 		compatible = "usb-nop-xceiv";
 		#phy-cells = <0>;
-		label = "OTGHS_FS_PHY";
 	};
 
 	leds {
 		compatible = "gpio-leds";
 		blue_led: led_0 {
 			gpios = <&gpioi 8 GPIO_ACTIVE_LOW>;
-			label = "LED_B";
 		};
 		red_led: led_1 {
 			gpios = <&gpioc 15 GPIO_ACTIVE_LOW>;
-			label = "LED_R";
 		};
 	};
 
 	gpio_keys {
 		compatible = "gpio-keys";
 		user_button: button_0 {
-			label = "USER";
 			gpios = <&gpioh 4 GPIO_ACTIVE_LOW>;
 		};
 	};
@@ -81,7 +74,7 @@
 };
 
 &fmc {
-	status = "disabled";
+	status = "okay";
 	pinctrl-0 = <&fmc_nbl0_pe0 &fmc_nbl1_pe1
 		     &fmc_sdclk_pg8 &fmc_sdnwe_ph5 &fmc_sdcke0_pc3
 		     &fmc_sdne0_pc2 &fmc_sdnras_pf11 &fmc_sdncas_pg15
@@ -96,7 +89,7 @@
 	pinctrl-names = "default";
 
 	sdram {
-		status = "disabled";
+		status = "okay";
 		power-up-delay = <100>;
 		num-auto-refresh = <8>;
 		mode-register = <0x221>;
@@ -123,6 +116,10 @@
 	status = "okay";
 };
 
+&clk_hsi48 {
+    status = "okay";
+};
+
 &pll {
 	div-m = <5>;
 	mul-n = <192>;
@@ -133,8 +130,18 @@
 	status = "okay";
 };
 
+&pll2 {
+    div-m = <2>;
+    mul-n = <64>;
+    div-p = <2>;
+    div-q = <2>;
+    div-r = <4>;
+    clocks = <&clk_hse>;
+    status = "disabled";
+};
+
 &rcc {
-	clocks = <&pll>;
+	clocks = <&pll>, <&pll2>;
 	clock-frequency = <DT_FREQ_M(480)>;
 	d1cpre = <1>;
 	hpre = <2>;
@@ -177,61 +184,6 @@
 	status = "okay";
 };
 
-&quadspi {
-	status = "disabled";
-	pinctrl-0 = <&quadspi_clk_pf10 &quadspi_bk1_ncs_pg6 &quadspi_bk1_io0_pf8 &quadspi_bk1_io1_pf9 &quadspi_bk1_io2_pf7 &quadspi_bk1_io3_pf6>;
-	pinctrl-names = "default";
-
-	qspi_nor_flash: qspi-nor-flash@0 {
-		compatible = "st,stm32-qspi-nor";
-		label = "W25Q64JYSIQ";
-		reg = <0>;
-		qspi-max-frequency = <80000000>;
-		size = <DT_SIZE_M(8*8)>;
-		status = "disabled";
-	};
-};
-
-&qspi_nor_flash {
-	partitions {
-		compatible = "fixed-partitions";
-		#address-cells = <1>;
-		#size-cells = <1>;
-
-		/* 128KB for bootloader */
-		boot_partition: partition@0 {
-			label = "mcuboot";
-			reg = <0x00000000 DT_SIZE_K(512)>;
-			read-only;
-		};
-
-		/* storage: 128KB for settings */
-		storage_partition: partition@20000 {
-			label = "storage";
-			reg = <0x00020000 DT_SIZE_K(512)>;
-		};
-
-		/* application image slot: 256KB */
-		slot0_partition: partition@40000 {
-			label = "image-0";
-			reg = <0x00040000 DT_SIZE_M(3)>;
-		};
-
-		/* backup slot: 256KB */
-		slot1_partition: partition@80000 {
-			label = "image-1";
-			reg = <0x00080000 DT_SIZE_M(3)>;
-		};
-
-		/* swap slot: 128KB */
-		scratch_partition: partition@c0000 {
-			label = "image-scratch";
-			reg = <0x000c0000 DT_SIZE_M(1)>;
-		};
-
-	};
-};
-
 &iwdg1 {
 	status = "okay";
 };
@@ -241,3 +193,6 @@ zephyr_udc0: &usbotg_fs {
 	pinctrl-names = "default";
 	status = "disabled";
 };
+
+// https://github.com/zephyrproject-rtos/zephyr/pull/62349#issuecomment-1735051590
+/delete-node/ &quadspi_memory;
